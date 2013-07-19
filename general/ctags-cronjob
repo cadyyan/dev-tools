@@ -1,0 +1,115 @@
+#!/usr/bin/env python
+
+# Meant to be used as part of a cron job to scan project directories or
+# folders that contain multiple projects and generate tag files for them
+# via ctags.
+
+import argparse
+import json
+import os
+import subprocess
+
+settings_path           = '~/.ctags_cron'
+formatted_settings_path = os.path.expanduser(settings_path)
+
+def parse_args():
+	parser = argparse.ArgumentParser(description = 'Scans directories defined by ' + settings_path + ' and generates tag files.')
+
+	group = parser.add_argument_group('noise')
+	group.add_argument('-q', '--quiet',		dest = 'quiet',		action = 'store_true', required = False)
+	group.add_argument('-v', '--verbose',	dest = 'verbose',	action = 'store_true', required = False)
+
+	parser.add_argument('-g', '--generate', dest = 'generate', action = 'store_true', required = False)
+
+	args = parser.parse_args()
+
+	return args
+
+def printv(args, message):
+	if args.verbose:
+		print message
+
+def printq(args, message):
+	if not args.quiet:
+		print message
+
+def generate_file(args):
+	default = json.loads('{ "projects": [], "project_containers": [] }')
+
+	file = open(formatted_settings_path, 'w')
+	json.dump(default, file, indent = 4)
+	file.close()
+
+def scan(args):
+		file = open(formatted_settings_path, 'r')
+		formatted_json = json.load(file)
+		file.close()
+
+		project_dirs       = formatted_json['projects']
+		project_containers = formatted_json['project_containers']
+
+		def check_dir(dir):
+			dir = os.path.expanduser(dir)
+			if not os.path.exists(dir):
+				printq(args, 'Path to {} does not exist. Skipping.'.format(dir))
+				return 0
+			elif not os.path.isdir(dir):
+				printq(args, '{} is not not a directory. Skipping.'.format(dir))
+				return 0
+
+			return 1
+
+		ctags_cmd = 'ctags -F {} -R {} {}'
+		def cmd(dir):
+			tag_file = os.path.join(dir, 'tags')
+			c = ctags_cmd.format(tag_file, dir, '-V' if args.verbose else '')
+
+			p = subprocess.Popen(c.split(' '))
+			p.communicate()
+
+		def scan_projects(projects):
+			for project in projects:
+				printv(args, 'Scanning {}...'.format(project))
+
+				if not check_dir(project):
+					continue
+
+				cmd(project)
+
+		printv(args, 'Scanning projects...')
+		scan_projects(project_dirs)
+
+		printv(args, 'Scanning project containers...')
+		for container in project_containers:
+			printv(args, 'Scanning container {}...'.format(container))
+
+			container = os.path.expanduser(container)
+
+			if not check_dir(container):
+				continue
+
+			projects = [os.path.join(container, project) for project in os.listdir(container)]
+			scan_projects(projects)
+
+def main():
+	args = parse_args()
+
+	if args.generate:
+		print('Generating settings file...')
+		generate_file(args)
+		print('Settings file generated!')
+	else:
+		if not os.path.exists(formatted_settings_path):
+			print 'Settings file (' + formatted_settings_path + ') does not exist.'
+			exit(1)
+		elif not os.path.isfile(formatted_settings_path):
+			print 'Does not accept settings directory. Must be file.'
+			exit(1)
+
+		printv(args, 'Scanning directories...')
+		scan(args)
+		printv(args, 'Finished scanning directories!')
+
+if __name__ == '__main__':
+	main()
+
