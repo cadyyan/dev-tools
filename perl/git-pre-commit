@@ -1,0 +1,189 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+git-pre-commit
+
+=head1 SYNOPSIS
+
+Don't allow committing perl files with perlcritic errors
+
+=head1 DESCRIPTION
+
+If this file is copied or linked to C<.git/hooks/pre-commit>, it will cause
+C<perlcritic> to be run when attempting to create a new commit.  If any
+problems are found the commit will be aborted before the editor is started for
+the commit message.
+
+If this checking needs to be bypassed, that may be done by using git commit's
+C<--no-verify> option.
+
+This script may be called with the C<--link> option to setup a link to itself
+in git's hook directory so that it will be used.
+
+=cut
+
+use 5.10.0;
+
+use strict;
+use warnings;
+use English qw( -no_match_vars );
+use IO::Pipe;
+use IPC::Run qw(run);
+use Term::ANSIColor qw(colored);
+
+our $ROOT = `git rev-parse --show-toplevel`;
+chomp $ROOT;
+
+# Link to this script from the git hooks directory when called with --link option
+sub make_link {
+	use Path::Class ();
+
+	# Ask git where the repository is, will be relative to the
+	my $git_dir = `git rev-parse --git-dir 2> /dev/null`;
+	die "Couldn't determine location of git repository" unless $git_dir;
+	chomp $git_dir;
+	$git_dir = Path::Class::Dir->new($git_dir);
+
+	# Check if hook already exists
+	my $hook_dir = $git_dir->subdir('hooks');
+	my $hook     = $hook_dir->file('pre-commit');
+	die "You already have a pre-commit hook\n" if $hook->stat;
+
+	# Create hook using relative path from hook directory to this file
+	my $script = Path::Class::File->new($0)->relative($hook_dir);
+	symlink $script, $hook or die "Couldn't create hook symlink: $!";
+
+	say "pre-commit hook successfully linked";
+	exit 0;
+}
+make_link if ( $ARGV[0] || '' ) eq '--link';
+
+# Check for any added/changed lines with trailing whitespace
+sub whitespace_check {
+	my $filename = shift;
+
+	return '' if $filename =~ /\.(?:csv|sql)$/;
+
+	my $hunk_head = qr{
+		^ @@ \s+
+		-
+		(?<orig_start>\d+)
+		,
+		(?<orig_size>\d+)
+		\s
+		[+]
+		(?<new_start>\d+)
+		,
+		(?<new_size>\d+)
+		\s+ @@
+	}x;
+
+	my $pipe = IO::Pipe->new();
+	$pipe->reader( qw{git diff --cached HEAD --}, $filename );
+
+	my $line;
+	my $err = '';
+	while (<$pipe>) {
+		chomp;
+
+		given ($_) {
+			when ($hunk_head) {
+				$line = $+{new_start};
+			}
+
+			when (/^[ ]/) {
+				++$line;
+			}
+
+			when (/^[+]/) {
+				$err .= "Trailing whitespace on line $line\n" if /\s+$/;
+				++$line;
+			}
+		}
+	}
+
+	return $err;
+}
+
+# Check if given file is a perl file based on file extension or presence of #!perl line
+sub is_perl {
+	my $filename = shift;
+	my $is_perl  = $filename =~ /\.p[ml]$/;
+	if ( not $is_perl ) {
+		# Don't try to interpret the file as UTF-8.
+		# That should be the case for text files, but won't be for binary files.
+		# Since we're only looking for ASCII characters, the encoding shouldn't matter.
+		open my $TYPE, '<:bytes', $filename;
+			$is_perl = <$TYPE> =~ m{^#!.*\bperl\b}i;
+			}
+			return $is_perl;
+	}
+
+# Check for errors in perl files that prevent them from being compiled
+sub perl_check {
+	my $file = shift;
+
+	return '' unless is_perl $file;
+
+	return check_content( $file, [qw{perl -Ilib -c}] );
+}
+
+# Check for problems found by perlcritic using default policy profile
+sub perl_critic {
+	my $file = shift;
+
+	return '' unless is_perl $file;
+
+	return check_content( $file, [ qw{perlcritic --color --quiet --profile}, "$ROOT/perlcriticrc" ] );
+}
+
+# Helper function to run external script to check contents of a file as it will
+# be in the commit
+sub check_content {
+	my $file    = shift;
+	my $checker = shift;
+
+	# Get the content of the file as it is to be committed
+	# The ":" before the filename indicates the version from git's index
+	my $content = [ qw(git cat-file -p), ":$file" ];
+	my $out = '';
+
+	my $good = run $content, '|', $checker, \$out, '2>&1';
+
+	return $good ? '' : $out;
+}
+
+# List files changed (or added) by the commit that is being done
+sub changed_files {
+	open my $FILES, 'git diff -z --cached --name-only --diff-filter=RMA HEAD |';
+	local $INPUT_RECORD_SEPARATOR = "\000";
+	my @files = <$FILES>;
+	chomp @files;
+	return @files;
+}
+
+my @changed = changed_files;
+
+my $errors;
+
+foreach my $file (@changed) {
+	my $err = '';
+
+	# Accumulate output from various checks for the file
+	$err .= whitespace_check $file;
+	$err .= perl_check $file;
+	$err .= perl_critic $file;
+
+	# If there's anything to say about the file, output it after stating the filename
+	if ($err) {
+		$errors = 1;
+		print q{"}, colored( $file, 'white on_blue' ), qq{"\n}, $err;
+	}
+}
+
+if ($errors) {
+	say STDERR q{Won't commit!  Use `git commit --no-verify` to override.};
+	exit 1;
+}
+
