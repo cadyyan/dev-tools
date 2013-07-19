@@ -59,7 +59,7 @@ def scan(args):
 
 			return 1
 
-		ctags_cmd = 'ctags -F {} -R {} {}'
+		ctags_cmd = 'ctags -f {} -R {} {}'
 		def cmd(dir):
 			tag_file = os.path.join(dir, 'tags')
 			c = ctags_cmd.format(tag_file, dir, '-V' if args.verbose else '')
