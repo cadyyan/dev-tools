@@ -2,7 +2,9 @@
 
 # Meant to be used as part of a cron job to scan project directories or
 # folders that contain multiple projects and generate tag files for them
-# via ctags.
+# via ctags. If you don't have a settings file for selecting project
+# directories or containers then use the -g option to auto-gen one.
+# A project container is a folder that contains multiple projects.
 
 import argparse
 import json
