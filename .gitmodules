@@ -1,9 +1,9 @@
 [submodule "javascript/jquery"]
 	path = javascript/jquery
-	url = git@github.com:jquery/jquery.git
+	url = https://github.com/jquery/jquery.git
 [submodule "javascript/jquery-ui"]
 	path = javascript/jquery-ui
-	url = git@github.com:jquery/jquery-ui.git
+	url = https://github.com/jquery/jquery-ui.git
 [submodule "python/django"]
 	path = python/django
-	url = git@github.com:django/django.git
+	url = https://github.com/django/django.git
