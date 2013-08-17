@@ -10,12 +10,12 @@
 [submodule "javascript/jquery-equalizebottoms"]
 	path = javascript/jquery-equalizebottoms
 	url = https://github.com/cowboy/jquery-equalizebottoms.git
-[submodule "jquery-outside-events"]
-	path = javascript/jquery-outside-events
-	url = https://github.com/cowboy/jquery-outside-events.git
-[submodule "jquery-resize"]
-	path = javascript/jquery-resize
-	url = https://github.com/cowboy/jquery-resize.git
 [submodule "javascript/jquery-cookie"]
 	path = javascript/jquery-cookie
 	url = https://github.com/carhartl/jquery-cookie.git
+[submodule "javascript/jquery-resize"]
+	path = javascript/jquery-resize
+	url = https://github.com/cowboy/jquery-resize.git
+[submodule "javascript/jquery-outside-events"]
+	path = javascript/jquery-outside-events
+	url = https://github.com/cowboy/jquery-outside-events.git
