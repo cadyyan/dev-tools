@@ -19,3 +19,69 @@
 [submodule "javascript/jquery-outside-events"]
 	path = javascript/jquery-outside-events
 	url = https://github.com/cowboy/jquery-outside-events.git
+[submodule "html/CustomElements"]
+	path = html/CustomElements
+	url = https://github.com/Polymer/CustomElements.git
+[submodule "html/HTMLImports"]
+	path = html/HTMLImports
+	url = https://github.com/Polymer/HTMLImports.git
+[submodule "html/labs"]
+	path = html/labs
+	url = https://github.com/Polymer/labs.git
+[submodule "html/more-elements"]
+	path = html/more-elements
+	url = https://github.com/Polymer/more-elements.git
+[submodule "html/NodeBind"]
+	path = html/NodeBind
+	url = https://github.com/Polymer/NodeBind.git
+[submodule "html/observe-js"]
+	path = html/observe-js
+	url = https://github.com/Polymer/observe-js.git
+[submodule "html/platform"]
+	path = html/platform
+	url = https://github.com/Polymer/platform.git
+[submodule "html/PointerEvents"]
+	path = html/PointerEvents
+	url = https://github.com/Polymer/PointerEvents.git
+[submodule "html/PointerGestures"]
+	path = html/PointerGestures
+	url = https://github.com/Polymer/PointerGestures.git
+[submodule "html/polymer"]
+	path = html/polymer
+	url = https://github.com/Polymer/polymer.git
+[submodule "html/polymer-elements"]
+	path = html/polymer-elements
+	url = https://github.com/Polymer/polymer-elements.git
+[submodule "html/polymer-expressions"]
+	path = html/polymer-expressions
+	url = https://github.com/Polymer/polymer-expressions.git
+[submodule "html/polymer-ui-elements"]
+	path = html/polymer-ui-elements
+	url = https://github.com/Polymer/polymer-ui-elements.git
+[submodule "html/projects"]
+	path = html/projects
+	url = https://github.com/Polymer/projects.git
+[submodule "html/pull-all.sh"]
+	path = html/pull-all.sh
+	url = https://github.com/Polymer/pull-all.sh.git
+[submodule "html/ShadowDOM"]
+	path = html/ShadowDOM
+	url = https://github.com/Polymer/ShadowDOM.git
+[submodule "html/TemplateBinding"]
+	path = html/TemplateBinding
+	url = https://github.com/Polymer/TemplateBinding.git
+[submodule "html/todomvc"]
+	path = html/todomvc
+	url = https://github.com/Polymer/todomvc.git
+[submodule "html/toolkit-ui"]
+	path = html/toolkit-ui
+	url = https://github.com/Polymer/toolkit-ui.git
+[submodule "html/tools"]
+	path = html/tools
+	url = https://github.com/Polymer/tools.git
+[submodule "html/WeakMap"]
+	path = html/WeakMap
+	url = https://github.com/Polymer/WeakMap.git
+[submodule "html/web-animations-js"]
+	path = html/web-animations-js
+	url = https://github.com/Polymer/web-animations-js.git
